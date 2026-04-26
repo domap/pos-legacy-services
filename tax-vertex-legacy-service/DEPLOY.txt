@@ -1,0 +1,18 @@
+Tax (Vertex) Legacy Service
+===========================
+Java 8, Spring Boot 2.7, WAR for external Tomcat.
+
+Build:
+  mvn clean package -DskipTests
+
+Run embedded:
+  mvn spring-boot:run
+  Port: 8083
+
+Tomcat:
+  Deploy target/tax-vertex-legacy.war
+
+APIs:
+  GET /api/tax/calculate?amount=100&postalCode=78701&region=TX
+
+vertex.endpoint and vertex.trustedId are placeholders; outbound calls fail locally and the service returns a deterministic stub rate for modernization exercises.

@@ -1,0 +1,19 @@
+Products (SFCC) Legacy Service
+==============================
+Java 8, Spring Boot 2.7, WAR for external Tomcat.
+
+Build:
+  mvn clean package -DskipTests
+
+Run embedded:
+  mvn spring-boot:run
+  Port: 8084
+
+Tomcat:
+  Deploy target/products-sfcc-legacy.war
+
+APIs:
+  GET /api/products/search?q=
+  GET /api/products/{id}
+
+Configure sfcc.host and sfcc.bearerToken for real OCAPI; otherwise the client returns stub products.

@@ -1,0 +1,19 @@
+Loyalty (Kobie) Legacy Service
+==============================
+Java 8, Spring Boot 2.7, WAR for external Tomcat.
+
+Build:
+  mvn clean package -DskipTests
+
+Run embedded:
+  mvn spring-boot:run
+  Port: 8082
+
+Tomcat:
+  Deploy target/loyalty-kobie-legacy.war
+
+APIs:
+  GET /api/loyalty/customer/email?email=
+  GET /api/loyalty/customer/phone?phone=
+
+Kobie integration is stubbed: set kobie.api.baseUrl to a real Kobie gateway when available; otherwise the client falls back to an offline stub with points and certificates.

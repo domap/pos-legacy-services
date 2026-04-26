@@ -1,0 +1,22 @@
+Customer Lookup Legacy Service
+================================
+Java 8, Spring Boot 2.7, WAR for external Tomcat.
+
+Build (requires JDK 8+ and Maven):
+  mvn clean package -DskipTests
+
+Run embedded (dev):
+  mvn spring-boot:run
+  Base URL: http://localhost:8081
+
+Deploy to local Tomcat:
+  Copy target/customer-lookup-legacy.war to $CATALINA_HOME/webapps/
+  Start Tomcat; context path is /customer-lookup-legacy (adjust server.servlet.context-path in application.properties if needed).
+
+APIs (JSON):
+  GET  /api/customer/lookup/email?email=
+  GET  /api/customer/lookup/telephone?telephone=
+  POST /api/customer/add
+  PUT  /api/customer/update/{id}
+
+H2 console (legacy): http://localhost:8081/h2-console (when running embedded)
