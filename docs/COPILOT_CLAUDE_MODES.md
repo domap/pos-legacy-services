@@ -1,6 +1,6 @@
-# GitHub Copilot — agent workflow (no copy-paste)
+# IDE custom agents — modernization workflow (no copy-paste)
 
-Custom agents live in **`.github/agents/*.agent.md`**. Each file embeds the **system prompt** (Markdown body after YAML frontmatter). In **VS Code**, open **Copilot Chat**, pick an agent from the **dropdown** — you do **not** paste prompts.
+Custom agents live in **`.github/agents/*.agent.md`**. Each file embeds the **system prompt** (Markdown body after YAML frontmatter). In **VS Code** with **GitHub Copilot** (or any editor that loads the same agent definitions), open the agent chat, pick an agent from the **dropdown** — you do **not** paste prompts manually.
 
 **Handoffs:** After a response, use the **handoff buttons** to move to the next agent with context and a **pre-filled** prompt (you can edit before sending). This encodes the modernization **workflow**.
 
@@ -40,6 +40,7 @@ Custom agents live in **`.github/agents/*.agent.md`**. Each file embeds the **sy
 
 1. Select **P0** and provide objective + **one** module scope.
 2. P0 invokes sub-agents in order: **S1 → S3 → S4 → (S5 if customer) → S6 → S7 → S2 → S8 → S9**.
+   - In **S3**, prefer OpenRewrite recipes for mechanical migration steps, then review and test.
 3. P0 stops after the selected module is completed.
 4. Developer starts a new run for the next module.
 
@@ -49,7 +50,7 @@ Custom agents live in **`.github/agents/*.agent.md`**. Each file embeds the **sy
 
 ## Always-on instructions
 
-Repo-wide Copilot context: **`.github/copilot-instructions.md`**.
+Repo-wide IDE / assistant context: **`.github/copilot-instructions.md`**.
 
 Deep reference: **`docs/DEEPWIKI.md`**, **`docs/CLAUDE_MODERNIZATION_PLAYBOOK.md`**, **`docs/TWELVE_FACTOR.md`**, **`docs/MULTI_BRAND_ARCHITECTURE.md`**.
 

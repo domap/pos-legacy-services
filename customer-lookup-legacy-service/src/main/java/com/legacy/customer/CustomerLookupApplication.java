@@ -1,20 +1,13 @@
 package com.legacy.customer;
 
+import com.legacy.customer.config.CustomerModuleProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-/**
- * Deploy as WAR to external Tomcat; also runnable via {@code main} for local dev.
- */
 @SpringBootApplication
-public class CustomerLookupApplication extends SpringBootServletInitializer {
-
-    @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-        return builder.sources(CustomerLookupApplication.class);
-    }
+@EnableConfigurationProperties(CustomerModuleProperties.class)
+public class CustomerLookupApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(CustomerLookupApplication.class, args);

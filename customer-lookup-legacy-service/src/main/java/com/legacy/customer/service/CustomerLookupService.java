@@ -1,8 +1,10 @@
 package com.legacy.customer.service;
 
-import com.legacy.customer.config.LegacyAppConstants;
+import com.legacy.customer.config.CustomerModuleProperties;
 import com.legacy.customer.model.CustomerEntity;
 import com.legacy.customer.repo.CustomerRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -17,14 +19,18 @@ import java.util.stream.Collectors;
 @Service
 public class CustomerLookupService {
 
-    private final CustomerRepository customerRepository;
+    private static final Logger log = LoggerFactory.getLogger(CustomerLookupService.class);
 
-    public CustomerLookupService(CustomerRepository customerRepository) {
+    private final CustomerRepository customerRepository;
+    private final int maxResults;
+
+    public CustomerLookupService(CustomerRepository customerRepository, CustomerModuleProperties moduleProperties) {
         this.customerRepository = customerRepository;
+        this.maxResults = moduleProperties.getMaxResults();
     }
 
     public Map<String, Object> findByEmail(String email) {
-        System.out.println("[CustomerLookupService] findByEmail email=" + email);
+        log.debug("findByEmail email={}", email);
         Optional<CustomerEntity> c = customerRepository.findByEmailIgnoreCase(email);
         if (!c.isPresent()) {
             return notFound("email", email);
@@ -33,23 +39,23 @@ public class CustomerLookupService {
     }
 
     public Map<String, Object> findByTelephone(String telephone) {
-        System.out.println("[CustomerLookupService] findByTelephone tel=" + telephone);
-        List<CustomerEntity> list = customerRepository.findByTelephone(telephone);
-        if (list.isEmpty()) {
+        log.debug("findByTelephone tel={}", telephone);
+        List<CustomerEntity> found = customerRepository.findByTelephone(telephone);
+        if (found.isEmpty()) {
             return notFound("telephone", telephone);
         }
-        if (list.size() > LegacyAppConstants.MAX_RESULTS) {
-            list = list.subList(0, LegacyAppConstants.MAX_RESULTS);
-        }
-        return new HashMap<String, Object>() {{
-            put("status", "OK");
-            put("count", list.size());
-            put("customers", list.stream().map(CustomerLookupService.this::toLegacyMap).collect(Collectors.toList()));
-        }};
+        final List<CustomerEntity> capped = found.size() > maxResults
+                ? found.subList(0, maxResults)
+                : found;
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", "OK");
+        body.put("count", capped.size());
+        body.put("customers", capped.stream().map(this::toLegacyMap).collect(Collectors.toList()));
+        return body;
     }
 
     public Map<String, Object> addCustomer(CustomerEntity input) {
-        System.out.println("[CustomerLookupService] addCustomer email=" + input.getEmail());
+        log.debug("addCustomer email={}", input.getEmail());
         if (input.getEmail() == null || input.getEmail().trim().isEmpty()) {
             Map<String, Object> err = new HashMap<String, Object>();
             err.put("status", "ERROR");
@@ -61,7 +67,7 @@ public class CustomerLookupService {
     }
 
     public Map<String, Object> updateCustomer(Long id, CustomerEntity input) {
-        System.out.println("[CustomerLookupService] updateCustomer id=" + id);
+        log.debug("updateCustomer id={}", id);
         Optional<CustomerEntity> existing = customerRepository.findById(id);
         if (!existing.isPresent()) {
             return notFound("id", String.valueOf(id));

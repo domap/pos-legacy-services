@@ -74,7 +74,7 @@ Suggested structure (conceptual):
 - `brands.<brandId>.customer.dbRef`
 - `brands.<brandId>.fallbackPolicy` (`FAIL_OPEN_STUB`, `FAIL_CLOSED`, ...)
 
-Do not commit provider secrets in repo. Use AWS Secrets Manager/External Secrets references.
+Do not commit provider secrets in repo. Bind secrets at deploy time (e.g. **AWS Secrets Manager** + **External Secrets Operator**, or your cloud’s equivalent).
 
 ## Data and DB strategy
 

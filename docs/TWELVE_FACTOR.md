@@ -1,6 +1,6 @@
-# Twelve-factor app — mapping for POS legacy services
+# Twelve-factor app — mapping for this legacy POS monorepo
 
-This document is the **explicit 12-factor checklist** for modernizing `customer-lookup`, `loyalty-kobie`, `products-sfcc`, and `tax-vertex`. Use it with `docs/DEEPWIKI.md` (current behavior) and `docs/CLAUDE_MODERNIZATION_PLAYBOOK.md` (agents and observability).
+This document is the **explicit 12-factor checklist** for modernizing `customer-lookup`, `loyalty-kobie`, `products-sfcc`, and `tax-vertex`. **Stack and maturity differ by module** until each service finishes its vertical slice; use `docs/DEEPWIKI.md` (current behavior) and `docs/CLAUDE_MODERNIZATION_PLAYBOOK.md` (agents and observability).
 
 ---
 
@@ -20,7 +20,7 @@ This document is the **explicit 12-factor checklist** for modernizing `customer-
 
 | Today | Modern |
 |-------|--------|
-| WAR + **provided** Tomcat | Executable **JAR** (or container entrypoint); JVM + app in image only |
+| WAR + **provided** Tomcat (interim, three modules) | **Executable JAR** + embedded Tomcat in **OCI image** for **every** module — **no WAR** on CI/CD or cluster paths once migration completes |
 
 ---
 
@@ -41,18 +41,18 @@ This document is the **explicit 12-factor checklist** for modernizing `customer-
 
 | Today | Modern |
 |-------|--------|
-| H2 **file** path in properties (customer) | **RDS** (or equivalent) URL from env in prod; H2 only for tests |
+| H2 **file** path in dev-style config (**customer-lookup** and similar) | **customer-lookup:** managed DB URL from env in prod; H2 only for embedded/dev/test profiles; other modules → same pattern as they migrate |
 | Hardcoded fallbacks in code comments | Same **interface**, different endpoints per env |
 
 ---
 
 ## V. Build, release, run
 
-**Target:** Strict pipeline: **build** → immutable **release** (image digest) → **run** in EKS.
+**Target:** Strict pipeline: **build** → immutable **release** (image digest) → **run** in **Kubernetes** (e.g. **EKS**).
 
 | Today | Modern |
 |-------|--------|
-| `mvn package` + copy WAR to Tomcat | CI builds image; Helm/GitOps applies manifest; no manual “edit on server” |
+| `mvn package` + copy **WAR** to Tomcat (legacy) | CI builds **JAR** image; Helm/GitOps applies manifest; **no WAR** or external servlet container on the release path |
 
 ---
 
@@ -112,7 +112,7 @@ This document is the **explicit 12-factor checklist** for modernizing `customer-
 
 | Today | Modern |
 |-------|--------|
-| `System.out.println`, file-backed H2 | **JSON logs** to stdout; aggregation in CloudWatch / backend; correlation with traces |
+| `System.out.println`, file-backed H2 | **JSON logs** to stdout; aggregation in your log stack (e.g. CloudWatch, OpenSearch, vendor); correlation with traces |
 
 ---
 

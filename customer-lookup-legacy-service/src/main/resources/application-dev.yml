@@ -1,0 +1,17 @@
+# Local / non-prod: file-backed H2 + demo seed (data.sql runs only for embedded DBs)
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/customer-legacy-db;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1}
+    driver-class-name: org.h2.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  jpa:
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+logging:
+  level:
+    org.springframework.web: DEBUG

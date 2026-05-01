@@ -1,9 +1,9 @@
-# Claude modernization playbook — agents, steps, observability
+# AI-assisted modernization playbook — agents, steps, observability
 
-Use this with **Claude Projects** (project knowledge: attach `docs/DEEPWIKI.md` + this file) or as **session instructions** for each chat. It defines **parent agents**, **sub-agents**, a **step-by-step pipeline**, and **mandatory observability** for every service.
+Use this as **project knowledge** (attach `docs/DEEPWIKI.md` + this file in your assistant’s project) or as **session instructions** for each working session. It defines **parent agents**, **sub-agents**, a **step-by-step pipeline**, and **mandatory observability** for every service.
 
-**GitHub Copilot:** Repo instructions in `.github/copilot-instructions.md`. **Custom agents** (embedded prompts + handoff workflow) in **`.github/agents/*.agent.md`** — see **`docs/COPILOT_CLAUDE_MODES.md`**.
-For no-manual workflow in Copilot, select **`p0-orchestrator`** only; it invokes specialized sub-agents automatically.
+**IDE agents (e.g. GitHub Copilot):** Repo instructions in `.github/copilot-instructions.md`. **Custom agents** (embedded prompts + handoff workflow) in **`.github/agents/*.agent.md`** — see **`docs/COPILOT_CLAUDE_MODES.md`**.
+Where supported, select **`p0-orchestrator`** only as the entrypoint; it invokes specialized sub-agents automatically.
 
 **Twelve-factor checklist (explicit):** `docs/TWELVE_FACTOR.md` — maps all 12 factors to this repo; sub-agent **S4** implements config/backing-service aspects in code.
 
@@ -11,13 +11,14 @@ For no-manual workflow in Copilot, select **`p0-orchestrator`** only; it invokes
 
 ---
 
-## Principles for every Claude session
+## Principles for every modernization session
 
 1. **Read first:** Open `docs/DEEPWIKI.md` for the service under work. Do not invent endpoints or ports.
 2. **One PR scope per sub-agent:** Small, reviewable changes with tests.
 3. **Observability is not optional:** No sub-agent closes work without the observability checklist for that slice (below).
 4. **Backward compatibility:** Unless explicitly versioning (`/api/v2`), preserve paths and query parameter names from Deepwiki.
-5. **Modernization minimum bar per service:** Spring Boot + Java upgrade, 12-factor config externalization, containerization, ECR image publishing path, AWS Secrets Manager integration, and EKS deployability.
+5. **Modernization minimum bar per service:** Spring Boot + JDK upgrade (per policy), 12-factor config externalization, containerization, image registry publishing path (e.g. ECR), integration with your **secret store** (e.g. AWS Secrets Manager + External Secrets), and **Kubernetes** deployability (e.g. EKS).
+6. **OpenRewrite recommendation:** Use OpenRewrite for repeatable mechanical migrations (for example `javax` -> `jakarta`) with a pilot-first approach and mandatory human/test validation.
 
 ---
 
@@ -65,12 +66,12 @@ Every modernized service must include:
 | **P3** | **Architecture & API** | URL compatibility, DTO vs map decisions, versioning |
 | **P4** | **Security & Compliance** | Secrets, scanning, SBOM, non-root containers |
 
-### Sub-agents (single-focus — one Claude chat each)
+### Sub-agents (single-focus — one agent / chat each)
 
 | ID | Name | Typical deliverable |
 |----|------|----------------------|
 | **S1** | **Inventory & Test Harness** | Contract tests from Deepwiki; WireMock for Kobie/SFCC/Vertex |
-| **S2** | **Build & Module Shape** | JAR packaging, `Dockerfile`, `mvnw` CI job |
+| **S2** | **Build & Module Shape** | **Executable JAR** + `Dockerfile` + **OCI** image per module (**no WAR** on release path); `mvnw` CI job |
 | **S3** | **Spring Boot Upgrade** | 2.7 → 3.x+, `javax` → `jakarta`, dependency fixes |
 | **S4** | **Config & 12-factor** | `@ConfigurationProperties`, env var mapping, no secrets in repo |
 | **S5** | **Persistence** (customer only) | Flyway, RDS URL, H2 test profile, readiness = DB |
@@ -91,9 +92,9 @@ Run phases in order; **parallelize** only where noted.
 
 **Steps:**
 
-1. Confirm target JDK (e.g. 25) and Spring Boot line that supports it.
-2. Attach **`docs/DEEPWIKI.md`** to the Claude project (or paste summary + link).
-3. Define “done”: e.g. all services JAR + image + Helm + observability + CI green.
+1. Confirm target **JDK** and **Spring Boot** line per **organization policy** (see `docs/DEEPWIKI.md` for the current per-module baseline).
+2. Attach **`docs/DEEPWIKI.md`** to the assistant project (or paste summary + link).
+3. Define “done”: e.g. all services **executable JAR** in **OCI images** (no WAR on release path) + Helm + observability + CI green.
 
 **Output:** A short **migration board** (table: service × phase status).
 
@@ -151,19 +152,19 @@ For **each** service:
 **Steps:**
 
 1. Tag strategy; semver per service.
-2. Deploy to **EKS** dev; smoke tests per Deepwiki endpoints.
+2. Deploy to a **dev Kubernetes** cluster (e.g. **EKS**); smoke tests per Deepwiki endpoints.
 3. Progressive rollout (optional): canary / Argo Rollouts.
 
 ---
 
-## Copy-paste: Claude system prompts (concise)
+## Copy-paste: system prompts (concise)
 
-Use as **custom instructions** or first message in a dedicated chat.
+Use as **custom instructions** or first message in a dedicated chat with your assistant.
 
 ### Program Orchestrator (P0)
 
 ```text
-You are the Program Orchestrator for modernizing the pos-legacy Spring Boot services.
+You are the Program Orchestrator for modernizing this monorepo’s Spring Boot services.
 Rules: (1) Always consult docs/DEEPWIKI.md for current APIs and ports. (2) Enforce observability: Actuator health/readiness/liveness, Micrometer metrics, OpenTelemetry traces, JSON logs with trace correlation. (3) One PR-sized change set per recommendation. (4) Preserve public HTTP contracts unless versioning is explicit.
 Output: numbered plan, risks, and which sub-agent should execute next.
 ```
@@ -183,7 +184,7 @@ You are the Observability sub-agent. For the given service: add spring-boot-star
 ### Kubernetes (S8)
 
 ```text
-You are the K8s packaging sub-agent. Produce Helm values and manifests for EKS: Deployment, Service, Ingress annotations for AWS LB Controller, ServiceAccount for IRSA, resource requests/limits, probes to actuator readiness/liveness, PodDisruptionBudget optional. No secrets in Git — use ExternalSecrets placeholders.
+You are the K8s packaging sub-agent. Produce Helm values and manifests for **Kubernetes** (e.g. **EKS**): Deployment, Service, Ingress annotations for your ingress/controller (e.g. AWS Load Balancer Controller), ServiceAccount with **workload identity** (e.g. **IRSA** on AWS), resource requests/limits, probes to actuator readiness/liveness, PodDisruptionBudget optional. No secrets in Git — use ExternalSecrets (or equivalent) placeholders.
 ```
 
 ---
@@ -218,4 +219,4 @@ Deliverable: <files> + how to verify locally
 ## Related files
 
 - **`docs/DEEPWIKI.md`** — Current behavior reference for code generation.
-- Per-module **`DEPLOY.txt`** — Legacy Tomcat notes (replace with container runbooks over time).
+- Per-module **`DEPLOY.txt`** — mix of legacy notes and **container/JAR** runbooks; **post-migration:** **JAR + image** only (`docs/DEEPWIKI.md`).

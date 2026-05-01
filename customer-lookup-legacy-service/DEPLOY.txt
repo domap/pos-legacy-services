@@ -1,22 +1,57 @@
 Customer Lookup Legacy Service
 ================================
-Java 8, Spring Boot 2.7, WAR for external Tomcat.
+Java 25, Spring Boot 3.5, executable JAR (embedded Tomcat), Flyway, Actuator, Micrometer Prometheus, OTLP tracing hooks.
 
-Build (requires JDK 8+ and Maven):
-  mvn clean package -DskipTests
+Build (Maven Wrapper 3.9.9 — JDK 25 required; no global Maven upgrade required)
+--------------------------------------------------------------------------------
+  cd customer-lookup-legacy-service
+  chmod +x mvnw   # if needed after git clone
+  export JAVA_HOME=…   # JDK 25 (Temurin or equivalent)
+  ./mvnw clean verify
 
-Run embedded (dev):
-  mvn spring-boot:run
+Run locally (default profile: dev — file-backed H2)
+-----------------------------------------------------
+  ./mvnw spring-boot:run
+
   Base URL: http://localhost:8081
 
-Deploy to local Tomcat:
-  Copy target/customer-lookup-legacy.war to $CATALINA_HOME/webapps/
-  Start Tomcat; context path is /customer-lookup-legacy (adjust server.servlet.context-path in application.properties if needed).
+  Actuator: http://localhost:8081/actuator/health/readiness
+  Prometheus: http://localhost:8081/actuator/prometheus
 
-APIs (JSON):
+Production-style run (Postgres / RDS — env required)
+----------------------------------------------------
+  export SPRING_PROFILES_ACTIVE=prod
+  export SPRING_DATASOURCE_URL='jdbc:postgresql://host:5432/dbname'
+  export SPRING_DATASOURCE_USERNAME='...'
+  export SPRING_DATASOURCE_PASSWORD='...'
+  java -jar target/customer-lookup-legacy.jar
+
+  Bind the same variables from AWS Secrets Manager via External Secrets in Kubernetes (see deploy/helm/customer-lookup).
+
+Container image
+---------------
+  From repository root:
+
+    docker build -f customer-lookup-legacy-service/Dockerfile -t customer-lookup-legacy:local customer-lookup-legacy-service
+
+  Runs as non-root UID 10001. Optional OpenTelemetry Java agent: see comments in Dockerfile.
+
+Kubernetes (Helm)
+-----------------
+  helm install cl ./customer-lookup-legacy-service/deploy/helm/customer-lookup -f your-values.yaml
+
+  Probes use /actuator/health/liveness and /actuator/health/readiness.
+
+CI / ECR
+--------
+  Workflow: .github/workflows/customer-lookup-legacy-service.yml
+  Configure repository variables AWS_REGION, AWS_ECR_REPOSITORY and secret AWS_ROLE_ARN (OIDC) for image push on main.
+
+APIs (unchanged — see docs/DEEPWIKI.md)
+---------------------------------------
   GET  /api/customer/lookup/email?email=
   GET  /api/customer/lookup/telephone?telephone=
   POST /api/customer/add
   PUT  /api/customer/update/{id}
 
-H2 console (legacy): http://localhost:8081/h2-console (when running embedded)
+H2 console (dev profile only): http://localhost:8081/h2-console

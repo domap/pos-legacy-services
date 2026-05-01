@@ -1,0 +1,38 @@
+# No plaintext secrets — bind AWS Secrets Manager / External Secrets into Kubernetes Secret keys below.
+replicaCount: 2
+
+image:
+  repository: REPLACE_ME_ACCOUNT.dkr.ecr.REGION.amazonaws.com/customer-lookup-legacy
+  tag: "" # set to immutable tag or digest from CI (e.g. git SHA)
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8081
+
+serviceAccount:
+  create: true
+  annotations: {}
+  # EKS IRSA example (set in environment-specific values file):
+  # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/customer-lookup-legacy
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# Secret must exist in the release namespace; keys match External Secrets / manual kubectl create secret.
+externalSecrets:
+  databaseSecretName: customer-lookup-db
+  jdbcUrlKey: jdbc-url
+  usernameKey: username
+  passwordKey: password
+
+ingress:
+  enabled: false
+  className: alb
+  host: customer-lookup.example.com
+  annotations: {}
